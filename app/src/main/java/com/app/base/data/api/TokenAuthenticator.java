@@ -38,16 +38,14 @@ public class TokenAuthenticator implements Authenticator {
     public Request authenticate(Route route, Response response) throws IOException {
         boolean refreshResult = refreshToken(AppPreferences.getInstance().getOAuth2Info().getRefreshToken().getRefreshTokenValue());
         if (refreshResult) {
-            //token moi cua ban day
             String accessToken = AppPreferences.getInstance().getOAuth2Info().getAccessToken();
-            // thuc hien request hien tai khi da lay duoc token moi
             return response.request().newBuilder().header("Authorization", accessToken).build();
         } else {
-            //Khi refresh token failed ban co the thuc hien action refresh lan tiep theo
             return null;
         }
     }
 
+    /*REFRESH TOKEN*/
     private boolean refreshToken(String refreshToken)
             throws IOException {
         URL refreshUrl = new URL(ServerPath.SERVER_PATH_OAUTH);
@@ -101,7 +99,7 @@ public class TokenAuthenticator implements Authenticator {
         wr.close();
 
         int responseCode = urlConnection.getResponseCode();
-
+        /*HANDLE RECEIVE TOKEN DATA*/
         if (responseCode == 200) {
             BufferedReader in =
                     new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
@@ -113,16 +111,12 @@ public class TokenAuthenticator implements Authenticator {
             }
             in.close();
             urlConnection.getInputStream().close();
-            // this gson part is optional , you can read response directly from Json too
             Gson gson = new Gson();
             OAuth2Response oAuth2Response =
                     gson.fromJson(response.toString(), OAuth2Response.class);
-            // handle new token ...
-            // save it to the shared preferences, storage ...
             AppPreferences.getInstance().saveOAuth2Info(oAuth2Response);
             return true;
         } else {
-            //cannot refresh
             return false;
         }
     }
